@@ -1,0 +1,3 @@
+oa-openfire.dtwave.com
+oa-mobile.dtwave.com
+oa.dtwave.com
