@@ -11,7 +11,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/projectdiscovery/cdncheck"
+	"github.com/Explorer1092/cdncheck"
 	"github.com/projectdiscovery/gologger"
 	"github.com/projectdiscovery/ipranger"
 	"github.com/projectdiscovery/naabu/v2/pkg/port"
@@ -91,12 +91,6 @@ type Scanner struct {
 	stream               bool
 	ListenHandler        *ListenHandler
 	OnReceive            result.ResultFn
-
-	// 自定义结构
-	Probes         []Probe          // 指纹信息
-	ProbesMapKName map[string]Probe // 指纹服务映射
-	ExcludeProbe   string           // 指纹排除项
-	Rarity         int              // 指纹端口优先级
 }
 
 // PkgSend is a TCP package
@@ -146,7 +140,6 @@ func NewScanner(options *Options) (*Scanner, error) {
 		tcpsequencer:  NewTCPSequencer(), // tcp序列号
 		IPRanger:      iprange,
 		OnReceive:     options.OnReceive,
-		Rarity:        options.Rarity,
 	}
 
 	// 存储主机发现结果
@@ -159,9 +152,6 @@ func NewScanner(options *Options) (*Scanner, error) {
 	if options.ExcludeCdn || options.OutputCdn {
 		scanner.cdn = cdncheck.New()
 	}
-
-	// todo: init nmap probe 指纹信息
-	scanner.InitProbesByContent(RuleProbe)
 
 	// 代理
 	var auth *proxy.Auth = nil
@@ -459,105 +449,4 @@ func (s *Scanner) ConnectPort(host string, p *port.Port, timeout time.Duration) 
 	}
 
 	return true, err
-}
-
-// InitProbesByContent
-// @Description: 初始化nmap指纹信息
-// @receiver s
-// @param content
-func (s *Scanner) InitProbesByContent(content string) {
-	s.parseProbesFromContent(content)
-	s.parseProbesToMapKName()
-}
-
-// 解析探针和指纹库
-func (s *Scanner) parseProbesFromContent(content string) {
-	var probes []Probe
-
-	var lines []string
-
-	linesTemp := strings.Split(content, "\n")
-	for _, line := range linesTemp {
-		// 去除空行和注释
-		if line == "" || strings.HasPrefix(line, "#") {
-			continue
-		}
-
-		lines = append(lines, line)
-	}
-
-	// 判断指纹库大小
-	if len(lines) == 0 {
-		panic("probe database length is zero")
-	}
-
-	// 判断指纹库是否符合格式，第一行需要以Exclude或Probe开头
-	firstLine := lines[0]
-	if !(strings.HasPrefix(firstLine, "Exclude ") || strings.HasPrefix(firstLine, "Probe ")) {
-		panic("probe entry must prefix is exclude or probe.")
-	}
-
-	// 判断指纹库是否包含Exclude设置
-	count := 0
-	for _, line := range lines {
-		if strings.HasPrefix(line, "Exclude ") {
-			count += 1
-		}
-		if count > 1 {
-			panic("指纹库只至多包含一个Exclude设置")
-		}
-	}
-
-	// 提取排除项
-	s.ExcludeProbe = firstLine[len("Exclude")+1:]
-
-	// 以'Probe'特征字符串进行拆分探针内容
-	newServiceContent := "\n" + strings.Join(lines[1:], "\n")
-	probeContent := strings.Split(newServiceContent, "\nProbe")[1:]
-
-	// 解析探针内容
-	for _, probeItem := range probeContent {
-		probe := Probe{}
-		probe.parseFromString(probeItem)
-		probes = append(probes, probe)
-	}
-
-	s.Probes = probes
-}
-
-// 解析指纹到字典库
-func (s *Scanner) parseProbesToMapKName() {
-	var probesMap = map[string]Probe{}
-	for _, probe := range s.Probes {
-		probesMap[probe.Name] = probe
-	}
-	s.ProbesMapKName = probesMap
-}
-
-// UseProbe
-// @Description: 根据Protocol来筛选要发送的端口指纹信息
-// @receiver s
-// @param target
-// @return probesUsed
-func (s *Scanner) UseProbe(p *port.Port) (probesUsed []Probe) {
-	// 使用所有 Probe 探针进行服务识别尝试，忽略Probe的Ports端口匹配
-	for _, probe := range s.Probes {
-		if strings.Contains(strings.ToLower(p.Protocol.String()), strings.ToLower(probe.Protocol)) {
-			probesUsed = append(probesUsed, probe)
-		}
-	}
-
-	// 按 Probe 的 Rarity 升序排列，这里 Rarity 越低的话，那么发包的时候先发送该Rarity的数据包
-	probesUsed = SortProbesByRarity(probesUsed)
-
-	var probesUsedFiltered []Probe
-	for _, probe := range probesUsed {
-		// 自定义控制 probe.Rarity > config.Rarity 的探针
-		if probe.Rarity > s.Rarity {
-			continue
-		}
-		probesUsedFiltered = append(probesUsedFiltered, probe)
-	}
-	probesUsed = probesUsedFiltered
-	return
 }

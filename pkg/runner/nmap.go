@@ -5,6 +5,7 @@ import (
 	"github.com/google/uuid"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"sort"
 	"strings"
 
@@ -44,6 +45,8 @@ func (r *Runner) handleNmap() error {
 		for _, ipPorts := range ipsPorts {
 			// 查看当前地址对应的开放端口的数量
 			length := len(ipPorts.Ports)
+
+			// 根据 开放端口数量 分级 1 2 3 0 级别来归类 IP
 			var index int
 			switch {
 			case length > 100 && length < 1000:
@@ -56,11 +59,11 @@ func (r *Runner) handleNmap() error {
 				//  0 < length <= 100
 				index = 0
 			}
-			// 分级 1 2 3 0 级别来归类不同地址的开放端口数量
+
 			ranges[index] = append(ranges[index], ipPorts)
 		}
 
-		for _, rang := range ranges {
+		for _, _range := range ranges {
 			args := strings.Split(command, " ")
 			var (
 				ips   []string
@@ -68,13 +71,15 @@ func (r *Runner) handleNmap() error {
 			)
 
 			allPorts := make(map[int]struct{})
-			for _, ipPorts := range rang {
+			for _, ipPorts := range _range {
+				// 聚合每个分类完登录下面的所有的IP
 				ips = append(ips, ipPorts.IP)
 				for _, pp := range ipPorts.Ports {
 					allPorts[pp.Port] = struct{}{}
 				}
 			}
 
+			// 聚合每个分类等级下面的所有的IP的端口信息
 			for p := range allPorts {
 				ports = append(ports, fmt.Sprint(p))
 			}
@@ -84,12 +89,19 @@ func (r *Runner) handleNmap() error {
 				continue
 			}
 
+			// ',' 拼接所有端口信息，后续作为nmap的-p参数进行使用
 			portsStr := strings.Join(ports, ",")
+
+			// ' ' 拼接所有的IP信息，后续作为nmap的IP地址参数进行使用
 			ipsStr := strings.Join(ips, " ")
 
+			// 添加端口参数
 			args = append(args, "-p", portsStr)
+
+			// 添加IP参数
 			args = append(args, ips...)
 
+			// 判断当前nmap命令是否可用于执行
 			commandCanBeExecuted := isCommandExecutable(args)
 
 			// 是否需要支持nmap进行调用
@@ -104,9 +116,10 @@ func (r *Runner) handleNmap() error {
 					posArgs = 1
 				}
 
+				var uuidString string
 				if r.options.NmapOx || r.options.NmapOj {
 					// 替换uuid字符串
-					args = replaceUUIDs(args)
+					args, uuidString = replaceUUIDs(args)
 				}
 
 				// if it's windows search for the executable
@@ -131,21 +144,51 @@ func (r *Runner) handleNmap() error {
 				}
 
 				// callback处理
-				if r.options.OnNMAPCallback != nil && r.options.NmapOx {
+				if r.options.OnNMAPCallback != nil {
 					// todo: 后期逻辑需要进一步优化
-					// todo: 目前判断比较简单, 回调的条件 指定了xml的输出 && 需要回调的操作
-					data, errMsg := os.ReadFile(DefaultResumeFilePath())
-					if err != nil {
-						gologger.Error().Msg(errMsg.Error())
+					var nmapParse *result.NmapResult
+					var data []byte
+					if r.options.NmapOx || r.options.NmapOj {
+						// todo: 指定文件输出的情况
+						data, err = os.ReadFile(DefaultNmapFilePath(uuidString))
+					} else {
+						// todo: 获取stdout内容转换为nmap结果
 					}
 
-					parse, errMsg := result.NmapResultParse(data)
 					if err != nil {
-						gologger.Error().Msg(errMsg.Error())
+						gologger.Error().Msg(err.Error())
+					}
+
+					nmapParse, err = result.NmapResultParse(data)
+					if err != nil {
+						gologger.Error().Msg(err.Error())
 					}
 
 					// todo: 回调处理
-					r.options.OnNMAPCallback(parse)
+					r.options.OnNMAPCallback(ipsPorts, nmapParse)
+				} else {
+					data, errMsg := os.ReadFile(DefaultNmapFilePath(uuidString))
+					if err != nil {
+						gologger.Error().Msg(errMsg.Error())
+					}
+
+					nmapParse, errMsg := result.NmapResultParse(data)
+					if err != nil {
+						gologger.Error().Msg(errMsg.Error())
+					}
+					for _, host := range nmapParse.Hosts {
+						for _, addr := range host.Addresses {
+							for _, port := range host.Ports {
+								// 整理 ip:port 对齐 host:port
+								// 获取对应ip的host信息
+
+								// note: 这里的hosts存在ipv4 或者是 ipv6的情况，如果需要过滤的话可以通过ipversion来进行筛选
+								hosts, _ := r.scanner.IPRanger.GetHostsByIP(addr.Addr)
+								fmt.Println("hosts: ", hosts)
+								fmt.Println(addr.Addr, addr.AddrType, port.Protocol, port.PortId, port.State.State, port.Service.Name, port.Service.Product, port.Service.CPEs)
+							}
+						}
+					}
 				}
 			} else {
 				gologger.Info().Msgf("Suggested nmap command: %s -p %s %s", command, portsStr, ipsStr)
@@ -177,19 +220,31 @@ func calculateCmdLength(args []string) int {
 	return commandLength
 }
 
+// DefaultNmapFilePath returns the default nmap file full path
+func DefaultNmapFilePath(uuid string) string {
+	return filepath.Join("/tmp/", uuid)
+}
+
+// cleanDupData
+// @Description: 清理重复数据
+func cleanDupData() {
+
+}
+
 // replaceUUIDs
 // @Description: 生成uuid字符串用于替换命令行中的${uuid}标识符
 // @param args
 // @param format
 // @return []string
-func replaceUUIDs(args []string) []string {
+func replaceUUIDs(args []string) ([]string, string) {
+	// Generate a new UUID v4
+	newUUID := uuid.New().String()
+
 	for i, arg := range args {
 		if strings.Contains(arg, "${uuid}") {
-			// Generate a new UUID v4
-			newUUID := uuid.New().String()
 			// Replace {uuid} in the argument with the new UUID
 			args[i] = strings.ReplaceAll(arg, "${uuid}", newUUID)
 		}
 	}
-	return args
+	return args, newUUID
 }

@@ -145,6 +145,8 @@ func ParseOptions() *Options {
 		flagSet.StringVarP(&options.Output, "output", "o", "", "file to write output to (optional)"),
 		flagSet.BoolVarP(&options.JSON, "json", "j", false, "write output in JSON lines format"),
 		flagSet.BoolVar(&options.CSV, "csv", false, "write output in csv format"),
+		flagSet.BoolVar(&options.NmapOj, "nj", false, "nmap write output in json format"),
+		flagSet.BoolVar(&options.NmapOx, "nx", false, "nmap write output in xml format"),
 	)
 
 	flagSet.CreateGroup("config", "Configuration",

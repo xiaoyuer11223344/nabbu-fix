@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
-	"github.com/projectdiscovery/naabu/v2/pkg/result"
 	"io"
 	"net"
 	"os"
@@ -133,7 +132,7 @@ func (r *Runner) AddTarget(target string) error {
 		}
 		for _, cidr := range cidrs {
 			if r.options.Stream {
-				r.streamChannel <- result.Target{Cidr: cidr.String()}
+				r.streamChannel <- Target{Cidr: cidr.String()}
 			} else if err := r.scanner.IPRanger.AddHostWithMetadata(cidr.String(), "cidr"); err != nil {
 				// Add cidr directly to ranger, as single ips would allocate more resources later
 				gologger.Warning().Msgf("%s\n", err)
@@ -146,7 +145,7 @@ func (r *Runner) AddTarget(target string) error {
 	if iputil.IsCIDR(target) {
 		if r.options.Stream {
 			// if stream
-			r.streamChannel <- result.Target{Cidr: target}
+			r.streamChannel <- Target{Cidr: target}
 		} else if err := r.scanner.IPRanger.AddHostWithMetadata(target, "cidr"); err != nil {
 			// Add cidr directly to ranger, as single ips would allocate more resources later
 			gologger.Warning().Msgf("%s\n", err)
@@ -163,7 +162,7 @@ func (r *Runner) AddTarget(target string) error {
 		}
 		if r.options.Stream {
 			// if stream mode
-			r.streamChannel <- result.Target{Cidr: iputil.ToCidr(target).String()}
+			r.streamChannel <- Target{Cidr: iputil.ToCidr(target).String()}
 		} else {
 			metadata := "ip"
 			if r.options.ReversePTR {
@@ -202,15 +201,15 @@ func (r *Runner) AddTarget(target string) error {
 		if r.options.Stream {
 			// 是否存在port ，可能是为了处理 1.1.1.1:8080 的情况
 			if hasPort {
-				r.streamChannel <- result.Target{Ip: ip, Port: port}
+				r.streamChannel <- Target{Ip: ip, Port: port}
 				if len(r.options.Ports) > 0 {
-					r.streamChannel <- result.Target{Cidr: iputil.ToCidr(ip).String()}
+					r.streamChannel <- Target{Cidr: iputil.ToCidr(ip).String()}
 					if err := r.scanner.IPRanger.AddHostWithMetadata(joinHostPort(ip, ""), target); err != nil {
 						gologger.Warning().Msgf("%s\n", err)
 					}
 				}
 			} else {
-				r.streamChannel <- result.Target{Cidr: iputil.ToCidr(ip).String()}
+				r.streamChannel <- Target{Cidr: iputil.ToCidr(ip).String()}
 				if err := r.scanner.IPRanger.AddHostWithMetadata(joinHostPort(ip, port), target); err != nil {
 					gologger.Warning().Msgf("%s\n", err)
 				}
