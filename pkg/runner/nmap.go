@@ -166,7 +166,7 @@ func (r *Runner) handleNmap() error {
 
 					// todo: 回调处理
 					r.options.OnNMAPCallback(ipsPorts, nmapParse)
-				} else {
+				} else if r.options.NmapOx || r.options.NmapOj {
 					data, errMsg := os.ReadFile(DefaultNmapFilePath(uuidString))
 					if err != nil {
 						gologger.Error().Msg(errMsg.Error())
@@ -176,19 +176,64 @@ func (r *Runner) handleNmap() error {
 					if err != nil {
 						gologger.Error().Msg(errMsg.Error())
 					}
-					for _, host := range nmapParse.Hosts {
-						for _, addr := range host.Addresses {
-							for _, port := range host.Ports {
-								// 整理 ip:port 对齐 host:port
-								// 获取对应ip的host信息
 
-								// note: 这里的hosts存在ipv4 或者是 ipv6的情况，如果需要过滤的话可以通过ipversion来进行筛选
-								hosts, _ := r.scanner.IPRanger.GetHostsByIP(addr.Addr)
-								fmt.Println("hosts: ", hosts)
-								fmt.Println(addr.Addr, addr.AddrType, port.Protocol, port.PortId, port.State.State, port.Service.Name, port.Service.Product, port.Service.CPEs)
+					ipHostMap := make(map[string]map[string][]string)
+					for _, nmapHost := range nmapParse.Hosts {
+						for _, nmapAddr := range nmapHost.Addresses {
+							// {"ip":addr.Addr, "host": [host1,host2,host3], "port": [80,443,8080]}
+							if _, exists := ipHostMap[nmapAddr.Addr]; !exists {
+								ipHostMap[nmapAddr.Addr] = map[string][]string{
+									"host": {}, // 初始化为空切片
+									"port": {}, // 固定端口列表，可以根据需要修改
+								}
 							}
+
+							var ip2hosts []string
+							ip2hosts, err = r.scanner.IPRanger.GetHostsByIP(nmapAddr.Addr)
+							if err != nil || len(ip2hosts) == 0 {
+								continue
+							}
+
+							for _, hostname := range ip2hosts {
+								hostFound := false
+								for _, existHost := range ipHostMap[nmapAddr.Addr]["host"] {
+									if existHost == hostname {
+										hostFound = true
+										break
+									}
+								}
+								if !hostFound {
+									ipHostMap[nmapAddr.Addr]["host"] = append(ipHostMap[nmapAddr.Addr]["host"], hostname)
+								}
+							}
+
+							for _, port := range nmapHost.Ports {
+								portFound := false
+
+								portIdString := fmt.Sprintf("%d", port.PortId)
+
+								for _, existPort := range ipHostMap[nmapAddr.Addr]["port"] {
+									if existPort == portIdString {
+										portFound = true
+										break
+									}
+								}
+								if !portFound {
+									ipHostMap[nmapAddr.Addr]["port"] = append(ipHostMap[nmapAddr.Addr]["Port"], portIdString)
+								}
+							}
+
+							// 输出相关信息（可选）
+							//fmt.Println("hosts: ", ip2hosts)
+							//for _, port := range nmapHost.Ports {
+							//	fmt.Println(nmapAddr.Addr, nmapAddr.AddrType, port.Protocol, port.PortId, port.State.State, port.Service.Name, port.Service.Product, port.Service.CPEs)
+							//}
+
+							fmt.Printf("ipHostMap: %+v", ipHostMap)
 						}
 					}
+				} else {
+
 				}
 			} else {
 				gologger.Info().Msgf("Suggested nmap command: %s -p %s %s", command, portsStr, ipsStr)

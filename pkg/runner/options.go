@@ -102,8 +102,6 @@ type Options struct {
 	DisableUpdateCheck bool
 	// MetricsPort with statistics
 	MetricsPort int
-	// 端口扫描优先级
-	Rarity int
 }
 
 // ParseOptions parses the command line flags provided by a user

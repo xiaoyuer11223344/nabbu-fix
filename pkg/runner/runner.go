@@ -139,7 +139,6 @@ func NewRunner(options *Options) (*Runner, error) {
 		Stream:        options.Stream,
 		OnReceive:     options.OnReceive,
 		ScanType:      options.ScanType,
-		Rarity:        options.Rarity,
 	}
 
 	// 数据包 callback 处理函数
@@ -318,7 +317,8 @@ func (r *Runner) RunEnumeration(pctx context.Context) error {
 
 	if r.options.Stream {
 		// 流式模式
-		go r.Load() //nolint
+		// no lint
+		go r.Load()
 	} else {
 		// 正常模式
 		// 获取要扫描的数据
@@ -693,6 +693,7 @@ func (r *Runner) RunEnumeration(pctx context.Context) error {
 					gologger.Debug().Msgf("Skipping %s, could not cast port %s: %v\n", targetWithPort, p, err)
 					continue
 				}
+
 				var portWithMetadata = port.Port{
 					Port:     pp,
 					Protocol: protocol.TCP,
