@@ -41,8 +41,8 @@ func (t *Timestamp) UnmarshalXMLAttr(attr xml.Attr) (err error) {
 	return t.str2time(attr.Value)
 }
 
-// NmapResult is contains all the data for a single nmap scan.
-type NmapResult struct {
+// NmapRun is contains all the data for a single nmap scan.
+type NmapRun struct {
 	Scanner          string         `xml:"scanner,attr" json:"scanner"`
 	Args             string         `xml:"args,attr" json:"args"`
 	Start            Timestamp      `xml:"start,attr" json:"start"`
@@ -350,8 +350,8 @@ type HostStats struct {
 // NmapResultParse takes a byte array of nmap xml data and unmarshals it into an
 // NmapRun struct. All elements are returned as strings, it is up to the caller
 // to check and cast them to the proper type.
-func NmapResultParse(content []byte) (*NmapResult, error) {
-	r := &NmapResult{}
+func NmapResultParse(content []byte) (*NmapRun, error) {
+	r := &NmapRun{}
 	err := xml.Unmarshal(content, r)
 	return r, err
 }
