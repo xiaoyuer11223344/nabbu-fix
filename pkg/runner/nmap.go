@@ -144,7 +144,7 @@ func (r *Runner) handleNmap() error {
 				}
 
 				if r.options.OnNMAPCallback != nil && (r.options.NmapOx || r.options.NmapOj) {
-					// todo: callback回调处理
+					// todo: callback
 
 					data, errMsg := os.ReadFile(DefaultNmapFilePath(uuidString))
 					if err != nil {
@@ -199,7 +199,7 @@ func (r *Runner) handleNmap() error {
 									}
 								}
 								if !portFound {
-									ipHostMap[nmapAddr.Addr]["port"] = append(ipHostMap[nmapAddr.Addr]["Port"], portIdString)
+									ipHostMap[nmapAddr.Addr]["port"] = append(ipHostMap[nmapAddr.Addr]["port"], portIdString)
 								}
 							}
 						}
@@ -252,11 +252,11 @@ func (r *Runner) handleNmap() error {
 								}
 							}
 
+							fmt.Println(nmapHost.Ports)
+
 							for _, port := range nmapHost.Ports {
 								portFound := false
-
 								portIdString := fmt.Sprintf("%d", port.PortId)
-
 								for _, existPort := range ipHostMap[nmapAddr.Addr]["port"] {
 									if existPort == portIdString {
 										portFound = true
@@ -264,7 +264,7 @@ func (r *Runner) handleNmap() error {
 									}
 								}
 								if !portFound {
-									ipHostMap[nmapAddr.Addr]["port"] = append(ipHostMap[nmapAddr.Addr]["Port"], portIdString)
+									ipHostMap[nmapAddr.Addr]["port"] = append(ipHostMap[nmapAddr.Addr]["port"], portIdString)
 								}
 							}
 
