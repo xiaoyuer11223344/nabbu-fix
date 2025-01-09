@@ -1,4 +1,4 @@
-module github.com/projectdiscovery/naabu/v2
+module github.com/xiaoyuer11223344/nabbu-fix/v2
 
 go 1.22.3
 

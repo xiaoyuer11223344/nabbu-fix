@@ -4,7 +4,7 @@ import (
 	_ "embed"
 	"time"
 
-	"github.com/projectdiscovery/naabu/v2/pkg/result"
+	"github.com/xiaoyuer11223344/nabbu-fix/v2/pkg/result"
 )
 
 // Options of the scan

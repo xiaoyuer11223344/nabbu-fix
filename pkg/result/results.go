@@ -3,8 +3,8 @@ package result
 import (
 	"sync"
 
-	"github.com/projectdiscovery/naabu/v2/pkg/port"
-	"github.com/projectdiscovery/naabu/v2/pkg/result/confidence"
+	"github.com/xiaoyuer11223344/nabbu-fix/v2/pkg/port"
+	"github.com/xiaoyuer11223344/nabbu-fix/v2/pkg/result/confidence"
 	"golang.org/x/exp/maps"
 )
 

@@ -7,8 +7,8 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	"github.com/projectdiscovery/naabu/v2/pkg/port"
-	"github.com/projectdiscovery/naabu/v2/pkg/protocol"
+	"github.com/xiaoyuer11223344/nabbu-fix/v2/pkg/port"
+	"github.com/xiaoyuer11223344/nabbu-fix/v2/pkg/protocol"
 )
 
 const portListStrParts = 2

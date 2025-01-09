@@ -7,9 +7,9 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	"github.com/projectdiscovery/naabu/v2/pkg/port"
-	"github.com/projectdiscovery/naabu/v2/pkg/privileges"
-	"github.com/projectdiscovery/naabu/v2/pkg/scan"
+	"github.com/xiaoyuer11223344/nabbu-fix/v2/pkg/port"
+	"github.com/xiaoyuer11223344/nabbu-fix/v2/pkg/privileges"
+	"github.com/xiaoyuer11223344/nabbu-fix/v2/pkg/scan"
 	fileutil "github.com/projectdiscovery/utils/file"
 	iputil "github.com/projectdiscovery/utils/ip"
 	osutil "github.com/projectdiscovery/utils/os"

@@ -7,8 +7,8 @@ import (
 	"strings"
 
 	"github.com/projectdiscovery/goflags"
-	"github.com/projectdiscovery/naabu/v2/pkg/privileges"
 	fileutil "github.com/projectdiscovery/utils/file"
+	"github.com/xiaoyuer11223344/nabbu-fix/v2/pkg/privileges"
 )
 
 func DoHealthCheck(options *Options, flagSet *goflags.FlagSet) string {

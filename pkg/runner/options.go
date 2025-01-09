@@ -4,11 +4,11 @@ import (
 	"os"
 	"time"
 
-	"github.com/projectdiscovery/naabu/v2/pkg/privileges"
-	"github.com/projectdiscovery/naabu/v2/pkg/result"
-	"github.com/projectdiscovery/naabu/v2/pkg/scan"
 	fileutil "github.com/projectdiscovery/utils/file"
 	sliceutil "github.com/projectdiscovery/utils/slice"
+	"github.com/xiaoyuer11223344/nabbu-fix/v2/pkg/privileges"
+	"github.com/xiaoyuer11223344/nabbu-fix/v2/pkg/result"
+	"github.com/xiaoyuer11223344/nabbu-fix/v2/pkg/scan"
 
 	"github.com/projectdiscovery/goflags"
 	"github.com/projectdiscovery/gologger"

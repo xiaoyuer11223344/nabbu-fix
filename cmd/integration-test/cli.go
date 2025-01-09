@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/projectdiscovery/naabu/v2/internal/testutils"
+	"github.com/xiaoyuer11223344/nabbu-fix/v2/internal/testutils"
 )
 
 var cliTestcases = map[string]testutils.TestCase{

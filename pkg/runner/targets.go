@@ -11,8 +11,8 @@ import (
 
 	"github.com/projectdiscovery/gologger"
 	"github.com/projectdiscovery/mapcidr/asn"
-	"github.com/projectdiscovery/naabu/v2/pkg/privileges"
-	"github.com/projectdiscovery/naabu/v2/pkg/scan"
+	"github.com/xiaoyuer11223344/nabbu-fix/v2/pkg/privileges"
+	"github.com/xiaoyuer11223344/nabbu-fix/v2/pkg/scan"
 	iputil "github.com/projectdiscovery/utils/ip"
 	readerutil "github.com/projectdiscovery/utils/reader"
 	"github.com/remeh/sizedwaitgroup"

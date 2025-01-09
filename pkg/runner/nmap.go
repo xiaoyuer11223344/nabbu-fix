@@ -12,8 +12,8 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/projectdiscovery/gologger"
-	"github.com/projectdiscovery/naabu/v2/pkg/result"
 	osutil "github.com/projectdiscovery/utils/os"
+	"github.com/xiaoyuer11223344/nabbu-fix/v2/pkg/result"
 )
 
 func (r *Runner) handleNmap() error {

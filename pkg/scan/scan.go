@@ -14,10 +14,10 @@ import (
 	"github.com/Explorer1092/cdncheck"
 	"github.com/projectdiscovery/gologger"
 	"github.com/projectdiscovery/ipranger"
-	"github.com/projectdiscovery/naabu/v2/pkg/port"
-	"github.com/projectdiscovery/naabu/v2/pkg/protocol"
-	"github.com/projectdiscovery/naabu/v2/pkg/result"
 	"github.com/projectdiscovery/networkpolicy"
+	"github.com/xiaoyuer11223344/nabbu-fix/v2/pkg/port"
+	"github.com/xiaoyuer11223344/nabbu-fix/v2/pkg/protocol"
+	"github.com/xiaoyuer11223344/nabbu-fix/v2/pkg/result"
 	"golang.org/x/net/proxy"
 )
 

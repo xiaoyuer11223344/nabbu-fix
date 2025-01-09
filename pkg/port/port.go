@@ -3,7 +3,7 @@ package port
 import (
 	"fmt"
 
-	"github.com/projectdiscovery/naabu/v2/pkg/protocol"
+	"github.com/xiaoyuer11223344/nabbu-fix/v2/pkg/protocol"
 )
 
 type Port struct {

@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/projectdiscovery/gologger"
-	"github.com/projectdiscovery/naabu/v2/pkg/port"
+	"github.com/xiaoyuer11223344/nabbu-fix/v2/pkg/port"
 )
 
 // ConnectVerify is used to verify if ports are accurate using a connect request
