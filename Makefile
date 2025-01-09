@@ -5,17 +5,21 @@ GOMOD=$(GOCMD) mod
 GOTEST=$(GOCMD) test
 GOFLAGS := -v 
 LDFLAGS := -s -w
+CGO_ENABLED=0
 
 ifeq ($(shell go env GOOS),darwin)
-    CGO_LDFLAGS := -L/opt/homebrew/Cellar/libpcap/1.10.4/lib
-    CGO_CFLAGS := -I/opt/homebrew/Cellar/libpcap/1.10.4/include
+    # macOS环境下设置CGO_ENABLED
+    CGO_ENABLED=1
 else
-    LDFLAGS := -extldflags "-static"
+    # 非macOS环境下设置LDFLAGS
+    ifneq ($(shell go env GOOS),darwin)
+        LDFLAGS=-extldflags "-static"
+    endif
 endif
 
 all: build
 build:
-	CGO_LDFLAGS="$(CGO_LDFLAGS)" CGO_CFLAGS="$(CGO_CFLAGS)" $(GOBUILD) $(GOFLAGS) -ldflags '$(LDFLAGS)' -o "naabu" cmd/naabu/main.go
+	CGO_ENABLED=$(CGO_ENABLED) CGO_LDFLAGS="$(CGO_LDFLAGS)" CGO_CFLAGS="$(CGO_CFLAGS)" $(GOBUILD) $(GOFLAGS) -ldflags '$(LDFLAGS)' -o "naabu" cmd/naabu/main.go
 goreleaser:
 	goreleaser build -f ./.goreleaser/mac.yml --skip=validate --clean
 test:
