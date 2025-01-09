@@ -10,7 +10,7 @@ import (
 
 type ResultFn func(*HostResult)
 
-type NmapResultFn func([]*HostResult, *NmapResult)
+type NmapResultFn func(map[string]map[string][]string)
 
 type HostResult struct {
 	Host       string
