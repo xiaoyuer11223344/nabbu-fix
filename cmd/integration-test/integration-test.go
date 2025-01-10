@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	// debug      = os.Getenv("DEBUG") == "true" // currently not used
+	debug      = os.Getenv("DEBUG") == "true" // currently not used
 	customTest = os.Getenv("TEST")
 	protocol   = os.Getenv("PROTO")
 
@@ -25,6 +25,7 @@ func main() {
 		"library": libraryTestcases,
 		"cli":     cliTestcases,
 	}
+
 	for proto, tests := range tests {
 		if protocol == "" || protocol == proto {
 			fmt.Printf("Running test cases for \"%s\"\n", aurora.Blue(proto))

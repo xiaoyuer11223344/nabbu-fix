@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	stringsutil "github.com/projectdiscovery/utils/strings"
+	"github.com/xiaoyuer11223344/nabbu-fix/v2/pkg/port"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"sort"
-	"strconv"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -167,40 +167,65 @@ func (r *Runner) handleNmap() error {
 							}
 
 							var found bool
-							for i, nd := range nmapResults {
-								if nd.IP == nmapAddr.Addr {
+							for i, nR := range nmapResults {
+								if nR.IP == nmapAddr.Addr {
 									for _, hostname := range ip2hosts {
-										if !stringsutil.ContainsAny(hostname, nd.Hosts...) {
+										if !stringsutil.EqualFoldAny(hostname, nR.Hosts...) {
 											nmapResults[i].Hosts = append(nmapResults[i].Hosts, hostname)
 										}
 									}
 
-									for _, port := range nmapHost.Ports {
-										portIdString := strconv.Itoa(port.PortId)
-										if !stringsutil.ContainsAny(portIdString, nd.Ports...) {
-											nmapResults[i].Ports = append(nmapResults[i].Ports, portIdString)
+									for _, _port := range nmapHost.Ports {
+										newPort := &port.Port{
+											Port:    _port.PortId,
+											Service: _port.Service.Name,
+										}
+
+										exist := false
+										for _, existPort := range nmapResults[i].Ports {
+											if existPort.Port == newPort.Port && existPort.Service == newPort.Service {
+												exist = true
+												break
+											}
+										}
+
+										if !exist {
+											nmapResults[i].Ports = append(nmapResults[i].Ports, newPort)
 										}
 									}
+
 									found = true
 									break
 								}
 							}
 
-							// 如果没有找到，则添加新的记录
+							// 如果没有找到则添加新的记录
 							if !found {
 								_hosts := make([]string, 0)
-								_ports := make([]string, 0)
+								_ports := make([]*port.Port, 0)
 
-								for _, hostname := range ip2hosts {
-									if !stringsutil.ContainsAny(hostname, _hosts...) {
-										_hosts = append(_hosts, hostname)
+								for _, _host := range ip2hosts {
+									if !stringsutil.EqualFoldAny(_host, _hosts...) {
+										_hosts = append(_hosts, _host)
 									}
 								}
 
-								for _, port := range nmapHost.Ports {
-									portIdString := strconv.Itoa(port.PortId)
-									if !stringsutil.ContainsAny(portIdString, _ports...) {
-										_ports = append(_ports, portIdString)
+								// 去重并添加端口
+								for _, _port := range nmapHost.Ports {
+									newPort := &port.Port{
+										Port:    _port.PortId,
+										Service: _port.Service.Name,
+									}
+
+									exist := false
+									for _, existPort := range _ports {
+										if existPort.Port == newPort.Port && existPort.Service == newPort.Service {
+											exist = true
+											break
+										}
+									}
+									if !exist {
+										_ports = append(_ports, newPort)
 									}
 								}
 
@@ -236,20 +261,33 @@ func (r *Runner) handleNmap() error {
 							}
 
 							var found bool
-							for i, nd := range nmapResults {
-								if nd.IP == nmapAddr.Addr {
+							for i, nR := range nmapResults {
+								if nR.IP == nmapAddr.Addr {
 									for _, hostname := range ip2hosts {
-										if !stringsutil.EqualFoldAny(hostname, nd.Hosts...) {
+										if !stringsutil.EqualFoldAny(hostname, nR.Hosts...) {
 											nmapResults[i].Hosts = append(nmapResults[i].Hosts, hostname)
 										}
 									}
 
-									for _, port := range nmapHost.Ports {
-										portIdString := strconv.Itoa(port.PortId)
-										if !stringsutil.EqualFoldAny(portIdString, nd.Ports...) {
-											nmapResults[i].Ports = append(nmapResults[i].Ports, portIdString)
+									for _, _port := range nmapHost.Ports {
+										newPort := &port.Port{
+											Port:    _port.PortId,
+											Service: _port.Service.Name,
+										}
+
+										exist := false
+										for _, existPort := range nmapResults[i].Ports {
+											if existPort.Port == newPort.Port && existPort.Service == newPort.Service {
+												exist = true
+												break
+											}
+										}
+
+										if !exist {
+											nmapResults[i].Ports = append(nmapResults[i].Ports, newPort)
 										}
 									}
+
 									found = true
 									break
 								}
@@ -258,7 +296,7 @@ func (r *Runner) handleNmap() error {
 							// 如果没有找到则添加新的记录
 							if !found {
 								_hosts := make([]string, 0)
-								_ports := make([]string, 0)
+								_ports := make([]*port.Port, 0)
 
 								for _, _host := range ip2hosts {
 									if !stringsutil.EqualFoldAny(_host, _hosts...) {
@@ -266,11 +304,22 @@ func (r *Runner) handleNmap() error {
 									}
 								}
 
+								// 去重并添加端口
 								for _, _port := range nmapHost.Ports {
-									fmt.Println("_port: ", _port)
-									portIdString := strconv.Itoa(_port.PortId)
-									if !stringsutil.EqualFoldAny(portIdString, _ports...) {
-										_ports = append(_ports, portIdString)
+									newPort := &port.Port{
+										Port:    _port.PortId,
+										Service: _port.Service.Name,
+									}
+
+									exist := false
+									for _, existPort := range _ports {
+										if existPort.Port == newPort.Port && existPort.Service == newPort.Service {
+											exist = true
+											break
+										}
+									}
+									if !exist {
+										_ports = append(_ports, newPort)
 									}
 								}
 
@@ -290,7 +339,10 @@ func (r *Runner) handleNmap() error {
 					}
 
 					for _, _result := range nmapResults {
-						fmt.Println(_result.IP, _result.Hosts, _result.Ports)
+						fmt.Println(_result.IP, _result.Hosts)
+						for _, _port := range _result.Ports {
+							fmt.Println(_port.Port, _port.Service)
+						}
 					}
 
 				}

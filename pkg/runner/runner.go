@@ -947,37 +947,26 @@ func (r *Runner) handleHostPort(ctx context.Context, host string, p *port.Port) 
 
 	select {
 	case <-ctx.Done():
-		fmt.Println("handleHostPort-11")
 		return
 	default:
 		// CDN检测
-		fmt.Println("handleHostPort-1")
 		if !r.canIScanIfCDN(host, p) {
 			gologger.Debug().Msgf("Skipping cdn target: %s:%d\n", host, p.Port)
 			return
 		}
-
-		fmt.Println("handleHostPort-2")
 
 		// 该host是否需要该端口对应的扫描操作, 如果对应的ip已经发送过包了，那么下次就不进行发包
 		if r.scanner.ScanResults.IPHasPort(host, p) {
 			return
 		}
 
-		fmt.Println("handleHostPort-3")
-
 		// 限制速率
 		r.limiter.Take()
-
-		fmt.Println("handleHostPort-4")
 
 		// 套接字连接端口
 		open, err := r.scanner.ConnectPort(host, p, time.Duration(r.options.Timeout)*time.Millisecond)
 
-		fmt.Println("handleHostPort-5")
-
 		if open && err == nil {
-			fmt.Println("handleHostPort-6")
 			// 添加已经扫描的端口，防止另外的域名解析的ip相同的时候重复进行扫描，浪费资源
 			r.scanner.ScanResults.AddPort(host, p)
 
@@ -992,15 +981,11 @@ func (r *Runner) handleHostPort(ctx context.Context, host string, p *port.Port) 
 
 			// 回调OnReceive处理结果
 			if r.scanner.OnReceive != nil {
-				fmt.Println("handleHostPort-7")
 				r.scanner.OnReceive(&result.HostResult{IP: host, Ports: []*port.Port{p}})
 			}
 
-			fmt.Println("handleHostPort-8")
 		}
-		fmt.Println("handleHostPort-9")
 	}
-	fmt.Println("handleHostPort-10")
 }
 
 func (r *Runner) handleHostDiscovery(host string) {

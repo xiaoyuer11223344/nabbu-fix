@@ -13,9 +13,10 @@ type ResultFn func(*HostResult)
 type NmapResultFn func([]*NmapResult)
 
 type NmapResult struct {
-	IP    string   `json:"ip"`
-	Hosts []string `json:"hosts"`
-	Ports []string `json:"ports"`
+	IP    string       `json:"ip"`
+	Hosts []string     `json:"hosts"`
+	Ports []*port.Port `json:"ports"`
+	//Ports []string `json:"ports"`
 }
 
 type HostResult struct {

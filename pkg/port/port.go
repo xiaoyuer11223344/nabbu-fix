@@ -8,6 +8,7 @@ import (
 
 type Port struct {
 	Port     int               `json:"port"`
+	Service  string            `json:"service"`
 	Protocol protocol.Protocol `json:"protocol"`
 	TLS      bool              `json:"tls"`
 }
