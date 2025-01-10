@@ -238,7 +238,6 @@ func (r *Runner) handleNmap() error {
 						}
 					}
 
-					// todo: 数据格式 {"ip":addr.Addr, "host": [host1,host2,host3], "port": ["80","443","8080"]}
 					r.options.OnNMAPCallback(nmapResults)
 
 				} else {
