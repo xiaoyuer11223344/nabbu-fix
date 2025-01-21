@@ -16,11 +16,13 @@ type NmapResult struct {
 	IP    string       `json:"ip"`
 	Hosts []string     `json:"hosts"`
 	Ports []*port.Port `json:"ports"`
+	Cdn   bool         `json:"cdn"`
 	//Ports []string `json:"ports"`
 }
 
 type HostResult struct {
 	Host       string
+	Cdn        bool
 	IP         string
 	Ports      []*port.Port
 	Confidence confidence.ConfidenceLevel

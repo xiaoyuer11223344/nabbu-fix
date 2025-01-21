@@ -11,6 +11,7 @@ type Port struct {
 	Service  string            `json:"service"`
 	Protocol protocol.Protocol `json:"protocol"`
 	TLS      bool              `json:"tls"`
+	Status   string            `json:"status"`
 }
 
 func (p *Port) String() string {
