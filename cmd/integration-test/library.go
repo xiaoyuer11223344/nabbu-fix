@@ -13,13 +13,13 @@ import (
 )
 
 var libraryTestcases = map[string]testutils.TestCase{
-	//"sdk - one passive execution":         &naabuPassiveSingleLibrary{},
-	//"sdk - one execution - connect":       &naabuSingleLibrary{scanType: "c"},
-	//"sdk - multiple executions - connect": &naabuMultipleExecLibrary{scanType: "c"},
+	"sdk - one passive execution":          &naabuPassiveSingleLibrary{},
+	"sdk - one execution - connect":        &naabuSingleLibrary{scanType: "c"},
+	"sdk - multiple executions - connect":  &naabuMultipleExecLibrary{scanType: "c"},
 	"sdk - one execution - connect - nmap": &naabuSingleExecNmapLibrary{scanType: "c"},
 
-	//"sdk - one execution - syn":           &naabuSingleLibrary{scanType: "s"},
-	//"sdk - multiple executions - syn":     &naabuMultipleExecLibrary{scanType: "s"},
+	"sdk - one execution - syn":       &naabuSingleLibrary{scanType: "s"},
+	"sdk - multiple executions - syn": &naabuMultipleExecLibrary{scanType: "s"},
 }
 
 type naabuPassiveSingleLibrary struct {

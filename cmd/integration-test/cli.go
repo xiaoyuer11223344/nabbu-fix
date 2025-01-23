@@ -5,7 +5,7 @@ import (
 )
 
 var cliTestcases = map[string]testutils.TestCase{
-	//"cli with passive flag": &cliWithPassiveFlag{},
+	"cli with passive flag": &cliWithPassiveFlag{},
 }
 
 type cliWithPassiveFlag struct {

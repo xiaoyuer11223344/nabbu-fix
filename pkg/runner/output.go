@@ -26,7 +26,7 @@ type Result struct {
 	Port      int       `json:"port,omitempty" csv:"port"`
 	Protocol  string    `json:"protocol,omitempty" csv:"protocol"`
 	TLS       bool      `json:"tls,omitempty" csv:"tls"`
-	IsCDNIP   bool      `json:"cdn,omitempty" csv:"cdn"`
+	IsCDN     bool      `json:"cdn,omitempty" csv:"cdn"`
 	CDNName   string    `json:"cdn-name,omitempty" csv:"cdn-name"`
 	TimeStamp time.Time `json:"timestamp,omitempty" csv:"timestamp"`
 }
@@ -45,7 +45,7 @@ func (r *Result) JSON() ([]byte, error) {
 		data.Host = r.Host
 	}
 	data.IP = r.IP
-	data.IsCDNIP = r.IsCDNIP
+	data.IsCDN = r.IsCDN
 	data.CDNName = r.CDNName
 	data.PortNumber = r.Port
 	data.Protocol = r.Protocol
@@ -119,7 +119,7 @@ func WriteJSONOutput(host, ip string, ports []*port.Port, outputCDN bool, isCdn 
 	}
 	data.IP = ip
 	if outputCDN {
-		data.IsCDNIP = isCdn
+		data.IsCDN = isCdn
 		data.CDNName = cdnName
 	}
 	for _, p := range ports {
@@ -141,7 +141,7 @@ func WriteCsvOutput(host, ip string, ports []*port.Port, outputCDN bool, isCdn b
 		data.Host = host
 	}
 	if outputCDN {
-		data.IsCDNIP = isCdn
+		data.IsCDN = isCdn
 		data.CDNName = cdnName
 	}
 	if header {

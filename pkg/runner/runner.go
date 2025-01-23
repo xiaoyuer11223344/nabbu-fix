@@ -216,23 +216,32 @@ func (r *Runner) onReceive(hostResult *result.HostResult) {
 
 	buffer := bytes.Buffer{}
 	writer := csv.NewWriter(&buffer)
+
 	for _, host := range dt {
-		// 晴空缓冲区字符串
+
+		// 清空缓冲区字符串
 		buffer.Reset()
+
+		var (
+			isCDN   bool
+			cdnName string
+		)
 
 		// 如果标识符为ip的话
 		if host == "ip" {
+			// CDN检测
 			host = hostResult.IP
+			isCDN, cdnName, _ = r.scanner.CdnCheck(host)
+		} else {
+			// CDN检测
+			isCDN, cdnName, _ = r.scanner.CdnCheckDomain(host)
 		}
-
-		// CDN检测
-		isCDNIP, cdnName, _ := r.scanner.CdnCheck(hostResult.IP)
 
 		// 保存数据到文件 (json或者是csv格式)
 		if r.options.JSON || r.options.CSV {
 			data := &Result{IP: hostResult.IP, TimeStamp: time.Now().UTC()}
 			if r.options.OutputCDN {
-				data.IsCDNIP = isCDNIP
+				data.IsCDN = isCDN
 				data.CDNName = cdnName
 			}
 			if host != hostResult.IP {
@@ -269,7 +278,7 @@ func (r *Runner) onReceive(hostResult *result.HostResult) {
 		} else {
 			// 默认控制台正常输出内容
 			for _, p := range hostResult.Ports {
-				if r.options.OutputCDN && isCDNIP {
+				if r.options.OutputCDN && isCDN {
 					// 如果指定了cdn输出的话，那么就是 host:port cdn
 					gologger.Silent().Msgf("%s:%d [%s]\n", host, p.Port, cdnName)
 				} else {
@@ -901,7 +910,7 @@ func (r *Runner) RawSocketEnumeration(ctx context.Context, ip string, p *port.Po
 	case <-ctx.Done():
 		return
 	default:
-		// cdn/waf扫描排除检查
+		// cdn 检测
 		if !r.canIScanIfCDN(ip, p) {
 			gologger.Debug().Msgf("Skipping cdn target: %s:%d\n", ip, p.Port)
 			return
@@ -925,20 +934,35 @@ func (r *Runner) RawSocketEnumeration(ctx context.Context, ip string, p *port.Po
 }
 
 // check if an ip can be scanned in case CDN/WAF exclusions are enabled
-// 检查在启用CDN/WAF排除的情况下是否可以扫描ip
-func (r *Runner) canIScanIfCDN(host string, port *port.Port) bool {
-	// 如果不排除CDN ips，则允许所有扫描
+func (r *Runner) canIScanIfCDN(ip string, port *port.Port) bool {
+
+	// if CDN ips are not excluded all scans are allowed
 	if !r.options.ExcludeCDN {
 		return true
 	}
 
-	// if exclusion is enabled, but the ip is not part of the CDN/WAF ips range we can scan
-	// 如果启用了排除，但该ip不属于我们可以扫描的CDN/WAF-ips范围
-	if ok, _, err := r.scanner.CdnCheck(host); err == nil && !ok {
+	hosts, err := r.scanner.IPRanger.GetHostsByIP(ip)
+	if err != nil {
 		return true
 	}
 
-	// 虽然是cdn，但是当前扫描的80或者是443端口，那么这种情况是允许的
+	// if exclusion is enabled, but the ip is not part of the CDN/WAF ips range we can scan
+	for _, host := range hosts {
+		var ok bool
+		if host == "ip" {
+			if ok, _, err = r.scanner.CdnCheck(ip); err == nil && !ok {
+				return true
+			}
+		} else {
+			for _, _host := range hosts {
+				if ok, _, err = r.scanner.CdnCheckDomain(_host); err == nil && !ok {
+					return true
+				}
+			}
+		}
+	}
+
+	// If the cdn is part of the CDN ips range - only ports 80 and 443 are allowed
 	return port.Port == 80 || port.Port == 443
 }
 
@@ -1150,20 +1174,29 @@ func (r *Runner) handleOutput(scanResults *result.Result) {
 			buffer := bytes.Buffer{}
 			for _, host := range dt {
 				buffer.Reset()
+
+				var (
+					isCDN   bool
+					cdnName string
+				)
+
+				// 检测是否存在cdn
 				if host == "ip" {
 					host = hostResult.IP
+					isCDN, cdnName, _ = r.scanner.CdnCheck(hostResult.IP)
+				} else {
+					// CDN检测
+					isCDN, cdnName, _ = r.scanner.CdnCheckDomain(host)
 				}
 
-				// 是否存在Cdn
-				isCDNIP, cdnName, _ := r.scanner.CdnCheck(hostResult.IP)
 				gologger.Info().Msgf("Found %d ports on host %s (%s)\n", len(hostResult.Ports), host, hostResult.IP)
 
 				// 文件保存
 				if file != nil {
 					if r.options.JSON {
-						err = WriteJSONOutput(host, hostResult.IP, hostResult.Ports, r.options.OutputCDN, isCDNIP, cdnName, file)
+						err = WriteJSONOutput(host, hostResult.IP, hostResult.Ports, r.options.OutputCDN, isCDN, cdnName, file)
 					} else if r.options.CSV {
-						err = WriteCsvOutput(host, hostResult.IP, hostResult.Ports, r.options.OutputCDN, isCDNIP, cdnName, csvFileHeaderEnabled, file)
+						err = WriteCsvOutput(host, hostResult.IP, hostResult.Ports, r.options.OutputCDN, isCDN, cdnName, csvFileHeaderEnabled, file)
 					} else {
 						// 输出
 						err = WriteHostOutput(host, hostResult.Ports, r.options.OutputCDN, cdnName, file)
@@ -1196,33 +1229,45 @@ func (r *Runner) handleOutput(scanResults *result.Result) {
 			buffer := bytes.Buffer{}
 			writer := csv.NewWriter(&buffer)
 			for _, host := range dt {
+
+				// 清空缓冲区
 				buffer.Reset()
-				if host == "ip" {
-					host = hostIP
-				}
+
+				var (
+					isCDN   bool
+					cdnName string
+				)
 
 				// 检测是否存在cdn
-				isCDNIP, cdnName, _ := r.scanner.CdnCheck(hostIP)
+				if host == "ip" {
+					host = hostIP
+					isCDN, cdnName, _ = r.scanner.CdnCheck(hostIP)
+				} else {
+					// CDN检测
+					isCDN, cdnName, _ = r.scanner.CdnCheckDomain(host)
+				}
+
 				gologger.Info().Msgf("Found alive host %s (%s)\n", host, hostIP)
 
 				// 控制台输出
 				if r.options.JSON || r.options.CSV {
 					data := &Result{IP: hostIP, TimeStamp: time.Now().UTC()}
 					if r.options.OutputCDN {
-						data.IsCDNIP = isCDNIP
+						data.IsCDN = isCDN
 						data.CDNName = cdnName
 					}
 					if host != hostIP {
 						data.Host = host
 					}
 				}
+
 				if r.options.JSON {
 					gologger.Silent().Msgf("%s", buffer.String())
 				} else if r.options.CSV {
 					writer.Flush()
 					gologger.Silent().Msgf("%s", buffer.String())
 				} else {
-					if r.options.OutputCDN && isCDNIP {
+					if r.options.OutputCDN && isCDN {
 						gologger.Silent().Msgf("%s [%s]\n", host, cdnName)
 					} else {
 						gologger.Silent().Msgf("%s\n", host)
@@ -1232,9 +1277,9 @@ func (r *Runner) handleOutput(scanResults *result.Result) {
 				// 文件保存
 				if file != nil {
 					if r.options.JSON {
-						err = WriteJSONOutput(host, hostIP, nil, r.options.OutputCDN, isCDNIP, cdnName, file)
+						err = WriteJSONOutput(host, hostIP, nil, r.options.OutputCDN, isCDN, cdnName, file)
 					} else if r.options.CSV {
-						err = WriteCsvOutput(host, hostIP, nil, r.options.OutputCDN, isCDNIP, cdnName, csvFileHeaderEnabled, file)
+						err = WriteCsvOutput(host, hostIP, nil, r.options.OutputCDN, isCDN, cdnName, csvFileHeaderEnabled, file)
 					} else {
 						err = WriteHostOutput(host, nil, r.options.OutputCDN, cdnName, file)
 					}

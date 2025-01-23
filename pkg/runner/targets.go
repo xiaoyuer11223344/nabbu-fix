@@ -30,7 +30,6 @@ func (r *Runner) Load() error {
 	r.targetsFile = targetfile
 
 	// pre-process all targets (resolves all non fqdn targets to ip address)
-	// 重新处理所有目标（将所有非fqdn目标解析为ip地址）
 	err = r.PreProcessTargets()
 	if err != nil {
 		gologger.Warning().Msgf("%s\n", err)
@@ -153,13 +152,15 @@ func (r *Runner) AddTarget(target string) error {
 		return nil
 	}
 
-	// IP地址 并且 目标地址不是在IPRanger黑名单中
+	// IP地址 但是目标地址不是在IPRanger黑名单中
 	if iputil.IsIP(target) && !r.scanner.IPRanger.Contains(target) {
 		ip := net.ParseIP(target)
+
 		// convert ip4 expressed as ip6 back to ip4
 		if ip.To4() != nil {
 			target = ip.To4().String()
 		}
+
 		if r.options.Stream {
 			// if stream mode
 			r.streamChannel <- Target{Cidr: iputil.ToCidr(target).String()}
@@ -183,12 +184,12 @@ func (r *Runner) AddTarget(target string) error {
 
 	// 解析当前target 的 host port hasPort
 	host, port, hasPort := getPort(target)
-
 	targetToResolve := target
 	if hasPort {
 		// target解析出来的地址就是host，如果有的话后续则进行dns域名解析
 		targetToResolve = host
 	}
+
 	// 解析fqdn对应的dns记录
 	ips, err := r.resolveFQDN(targetToResolve)
 	if err != nil {
