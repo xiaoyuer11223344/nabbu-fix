@@ -22,7 +22,7 @@ func (r *Runner) Load() error {
 	// 阶段为 "Init"
 	r.scanner.ListenHandler.Phase.Set(scan.Init)
 
-	// 合并所有输入源的数据
+	// 将所有输入源的数据进行合并
 	targetfile, err := r.mergeToFile()
 	if err != nil {
 		return err

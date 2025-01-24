@@ -161,7 +161,8 @@ func (r *Runner) handleNmap() error {
 
 					for _, nmapHost := range nmapParse.Hosts {
 						for _, nmapAddr := range nmapHost.Addresses {
-							ip2hosts, err := r.scanner.IPRanger.GetHostsByIP(nmapAddr.Addr)
+							var ip2hosts []string
+							ip2hosts, err = r.scanner.IPRanger.GetHostsByIP(nmapAddr.Addr)
 							if err != nil || len(ip2hosts) == 0 {
 								continue
 							}
@@ -176,9 +177,17 @@ func (r *Runner) handleNmap() error {
 									}
 
 									for _, _port := range nmapHost.Ports {
+
 										newPort := &port.Port{
 											Port:    _port.PortId,
 											Service: _port.Service.Name,
+										}
+
+										// todo: http+tls -> https
+										if _port.Service.Name == "http" {
+											if _port.Service.Tunnel == "ssl" {
+												newPort.Service = "https"
+											}
 										}
 
 										exist := false
@@ -217,6 +226,13 @@ func (r *Runner) handleNmap() error {
 										Service: _port.Service.Name,
 									}
 
+									// todo: http+tls -> https
+									if _port.Service.Name == "http" {
+										if _port.Service.Tunnel == "ssl" {
+											newPort.Service = "https"
+										}
+									}
+
 									exist := false
 									for _, existPort := range _ports {
 										if existPort.Port == newPort.Port && existPort.Service == newPort.Service {
@@ -224,6 +240,7 @@ func (r *Runner) handleNmap() error {
 											break
 										}
 									}
+
 									if !exist {
 										_ports = append(_ports, newPort)
 									}
@@ -274,6 +291,13 @@ func (r *Runner) handleNmap() error {
 											Service: _port.Service.Name,
 										}
 
+										// todo: http+tls -> https
+										if _port.Service.Name == "http" {
+											if _port.Service.Tunnel == "ssl" {
+												newPort.Service = "https"
+											}
+										}
+
 										exist := false
 										for _, existPort := range nmapResults[i].Ports {
 											if existPort.Port == newPort.Port && existPort.Service == newPort.Service {
@@ -308,6 +332,13 @@ func (r *Runner) handleNmap() error {
 									newPort := &port.Port{
 										Port:    _port.PortId,
 										Service: _port.Service.Name,
+									}
+
+									// todo: http+tls -> https
+									if _port.Service.Name == "http" {
+										if _port.Service.Tunnel == "ssl" {
+											newPort.Service = "https"
+										}
 									}
 
 									exist := false

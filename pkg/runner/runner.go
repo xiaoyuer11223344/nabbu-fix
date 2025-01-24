@@ -118,7 +118,7 @@ func NewRunner(options *Options) (*Runner, error) {
 		return nil, err
 	}
 
-	// 要扫描的目标，用于后续如果开启stream模式的情况下使用
+	// 当开启了stream扫描模式，那么该streamChannel就是用来存储后续要扫描的目标
 	runner.streamChannel = make(chan Target)
 
 	// 缓存
@@ -661,7 +661,7 @@ func (r *Runner) RunEnumeration(pctx context.Context) error {
 					continue
 				}
 
-				// 扫描之前，先检查 当前ip是否存在扫描记录，并且查看该扫描记录扫描出来的端口超过 >= 阈值
+				// 扫描之前，先检查当前ip是否存在扫描记录，并且查看该扫描记录扫描出来的端口超过>=阈值
 				// note: 这种现象相当于类似cdn ip 或者 存在防火墙的情况，导致出现端口存活误报的情况
 				if r.options.PortThreshold > 0 && r.scanner.ScanResults.GetPortCount(ip) >= r.options.PortThreshold {
 					hosts, _ := r.scanner.IPRanger.GetHostsByIP(ip)
