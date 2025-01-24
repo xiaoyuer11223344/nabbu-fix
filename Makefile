@@ -17,7 +17,7 @@ endif
 
 all: build
 
-publish:
+tag:
 	$(GITCMD) tag -d v1.0.0
 	$(GITCMD) push origin -d v1.0.0
 	$(GITCMD) tag v1.0.0
