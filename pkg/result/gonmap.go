@@ -355,3 +355,11 @@ func NmapResultParse(content []byte) (*NmapRun, error) {
 	err := xml.Unmarshal(content, r)
 	return r, err
 }
+
+func ConvertCPEsToStrings(cpes []CPE) []string {
+	result := make([]string, len(cpes))
+	for i, cpe := range cpes {
+		result[i] = string(cpe)
+	}
+	return result
+}

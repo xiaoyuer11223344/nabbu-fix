@@ -18,10 +18,10 @@ endif
 all: build
 
 tag:
-	$(GITCMD) tag -d v1.0.0
-	$(GITCMD) push origin -d v1.0.0
-	$(GITCMD) tag v1.0.0
-	$(GITCMD) push origin v1.0.0
+	$(GITCMD) tag -d v2.0.0
+	$(GITCMD) push origin -d v2.0.0
+	$(GITCMD) tag v2.0.0
+	$(GITCMD) push origin v2.0.0
 
 build:
 	CGO_ENABLED=$(CGO_ENABLED) CGO_LDFLAGS="$(CGO_LDFLAGS)" CGO_CFLAGS="$(CGO_CFLAGS)" $(GOBUILD) $(GOFLAGS) -ldflags '$(LDFLAGS)' -o "naabu" cmd/naabu/main.go

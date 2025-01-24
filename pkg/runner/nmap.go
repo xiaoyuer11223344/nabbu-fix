@@ -179,8 +179,14 @@ func (r *Runner) handleNmap() error {
 									for _, _port := range nmapHost.Ports {
 
 										newPort := &port.Port{
-											Port:    _port.PortId,
-											Service: _port.Service.Name,
+											Port:       _port.PortId,
+											Service:    _port.Service.Name,
+											Product:    _port.Service.Product,
+											Version:    _port.Service.Version,
+											ExtraInfo:  _port.Service.ExtraInfo,
+											DeviceType: _port.Service.DeviceType,
+											ServiceFp:  _port.Service.ServiceFp,
+											CPE:        strings.Join(result.ConvertCPEsToStrings(_port.Service.CPEs), ","),
 										}
 
 										// todo: http+tls -> https
@@ -222,8 +228,14 @@ func (r *Runner) handleNmap() error {
 								// 去重并添加端口
 								for _, _port := range nmapHost.Ports {
 									newPort := &port.Port{
-										Port:    _port.PortId,
-										Service: _port.Service.Name,
+										Port:       _port.PortId,
+										Service:    _port.Service.Name,
+										Product:    _port.Service.Product,
+										Version:    _port.Service.Version,
+										ExtraInfo:  _port.Service.ExtraInfo,
+										DeviceType: _port.Service.DeviceType,
+										ServiceFp:  _port.Service.ServiceFp,
+										CPE:        strings.Join(result.ConvertCPEsToStrings(_port.Service.CPEs), ","),
 									}
 
 									// todo: http+tls -> https
@@ -287,8 +299,14 @@ func (r *Runner) handleNmap() error {
 
 									for _, _port := range nmapHost.Ports {
 										newPort := &port.Port{
-											Port:    _port.PortId,
-											Service: _port.Service.Name,
+											Port:       _port.PortId,
+											Service:    _port.Service.Name,
+											Product:    _port.Service.Product,
+											Version:    _port.Service.Version,
+											ExtraInfo:  _port.Service.ExtraInfo,
+											DeviceType: _port.Service.DeviceType,
+											ServiceFp:  _port.Service.ServiceFp,
+											CPE:        strings.Join(result.ConvertCPEsToStrings(_port.Service.CPEs), ","),
 										}
 
 										// todo: http+tls -> https
@@ -330,8 +348,14 @@ func (r *Runner) handleNmap() error {
 								// 去重并添加端口
 								for _, _port := range nmapHost.Ports {
 									newPort := &port.Port{
-										Port:    _port.PortId,
-										Service: _port.Service.Name,
+										Port:       _port.PortId,
+										Service:    _port.Service.Name,
+										Product:    _port.Service.Product,
+										Version:    _port.Service.Version,
+										ExtraInfo:  _port.Service.ExtraInfo,
+										DeviceType: _port.Service.DeviceType,
+										ServiceFp:  _port.Service.ServiceFp,
+										CPE:        strings.Join(result.ConvertCPEsToStrings(_port.Service.CPEs), ","),
 									}
 
 									// todo: http+tls -> https
@@ -369,9 +393,9 @@ func (r *Runner) handleNmap() error {
 					}
 
 					for _, _result := range nmapResults {
-						fmt.Println(_result.IP, _result.Hosts)
+						fmt.Printf("%+v\n", _result)
 						for _, _port := range _result.Ports {
-							fmt.Println(_port.Port, _port.Service)
+							fmt.Println(_port.Port, _port.Service, _port.Product, _port.Version, _port.ExtraInfo, _port.CPE, _port.DeviceType, _port.ServiceFp)
 						}
 					}
 
