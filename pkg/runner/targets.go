@@ -196,6 +196,8 @@ func (r *Runner) AddTarget(target string) error {
 		return err
 	}
 
+	//fmt.Println("域名IP解析: ", targetToResolve, ips)
+
 	// 遍历dns记录
 	for _, ip := range ips {
 		// check stream mode

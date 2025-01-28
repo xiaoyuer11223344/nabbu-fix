@@ -189,6 +189,11 @@ func (r *Runner) handleNmap() error {
 											CPE:        strings.Join(result.ConvertCPEsToStrings(_port.Service.CPEs), ","),
 										}
 
+										// todo: null -> unknown
+										if _port.Service.Name == "" {
+											newPort.Service = "unknown"
+										}
+
 										// todo: http+tls -> https
 										if _port.Service.Name == "http" {
 											if _port.Service.Tunnel == "ssl" {
@@ -236,6 +241,11 @@ func (r *Runner) handleNmap() error {
 										DeviceType: _port.Service.DeviceType,
 										ServiceFp:  _port.Service.ServiceFp,
 										CPE:        strings.Join(result.ConvertCPEsToStrings(_port.Service.CPEs), ","),
+									}
+
+									// todo: null -> unknown
+									if _port.Service.Name == "" {
+										newPort.Service = "unknown"
 									}
 
 									// todo: http+tls -> https
@@ -309,6 +319,11 @@ func (r *Runner) handleNmap() error {
 											CPE:        strings.Join(result.ConvertCPEsToStrings(_port.Service.CPEs), ","),
 										}
 
+										// todo: null -> unknown
+										if _port.Service.Name == "" {
+											newPort.Service = "unknown"
+										}
+
 										// todo: http+tls -> https
 										if _port.Service.Name == "http" {
 											if _port.Service.Tunnel == "ssl" {
@@ -356,6 +371,11 @@ func (r *Runner) handleNmap() error {
 										DeviceType: _port.Service.DeviceType,
 										ServiceFp:  _port.Service.ServiceFp,
 										CPE:        strings.Join(result.ConvertCPEsToStrings(_port.Service.CPEs), ","),
+									}
+
+									// todo: null -> unknown
+									if _port.Service.Name == "" {
+										newPort.Service = "unknown"
 									}
 
 									// todo: http+tls -> https
@@ -433,12 +453,6 @@ func calculateCmdLength(args []string) int {
 // DefaultNmapFilePath returns the default nmap file full path
 func DefaultNmapFilePath(uuid string) string {
 	return filepath.Join("/tmp/", uuid)
-}
-
-// cleanDupData
-// @Description: 清理重复数据
-func cleanDupData() {
-
 }
 
 // replaceUUIDs
