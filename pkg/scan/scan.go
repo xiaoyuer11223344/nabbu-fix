@@ -312,11 +312,11 @@ func (s *Scanner) TCPResultWorker(ctx context.Context) {
 				// 当前Phase状态是否是端口扫描
 				gologger.Debug().Msgf("Received Transport (TCP) scan response from ipv4:%s ipv6:%s port:%d\n", ip.ipv4, ip.ipv6, ip.port.Port)
 				if ip.ipv4 != "" {
-					// 存储 主机对应的端口 开放情况
+					// 存储 IPv4 主机对应的端口 开放情况
 					s.ScanResults.AddPort(ip.ipv4, ip.port)
 				}
 				if ip.ipv6 != "" {
-					// 存储 主机对应的端口 开放情况
+					// 存储 IPv6 主机对应的端口 开放情况
 					s.ScanResults.AddPort(ip.ipv6, ip.port)
 				}
 			}

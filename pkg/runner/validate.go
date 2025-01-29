@@ -7,13 +7,13 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	"github.com/xiaoyuer11223344/nabbu-fix/v2/pkg/port"
-	"github.com/xiaoyuer11223344/nabbu-fix/v2/pkg/privileges"
-	"github.com/xiaoyuer11223344/nabbu-fix/v2/pkg/scan"
 	fileutil "github.com/projectdiscovery/utils/file"
 	iputil "github.com/projectdiscovery/utils/ip"
 	osutil "github.com/projectdiscovery/utils/os"
 	sliceutil "github.com/projectdiscovery/utils/slice"
+	"github.com/xiaoyuer11223344/nabbu-fix/v2/pkg/port"
+	"github.com/xiaoyuer11223344/nabbu-fix/v2/pkg/privileges"
+	"github.com/xiaoyuer11223344/nabbu-fix/v2/pkg/scan"
 
 	"github.com/projectdiscovery/gologger"
 	"github.com/projectdiscovery/gologger/formatter"
@@ -33,6 +33,12 @@ func (options *Options) ValidateOptions() error {
 	// 如果没有提供，请返回。
 	if options.Host == nil && options.HostsFile == "" && !options.Stdin && len(flag.Args()) == 0 {
 		return errNoInputList
+	}
+
+	// 修复 -sn 无效的情况
+	if (options.WithHostDiscovery || options.OnlyHostDiscovery) && options.ScanType != SynScan {
+		gologger.Warning().Msgf("host discovery requires syn scan, automatically switching to syn scan")
+		options.ScanType = SynScan
 	}
 
 	// 使用了详细和无声的标志
@@ -189,7 +195,7 @@ func (options *Options) configureHostDiscovery(ports []*port.Port) {
 		options.WithHostDiscovery = false
 	}
 	if options.shouldDiscoverHosts() && !options.hasProbes() {
-		// 如果未定义选项，则启用
+		// 如果未定义选项，则默认启用
 		// - ICMP Echo Request
 		// - ICMP timestamp
 		// - TCP SYN on port 80
