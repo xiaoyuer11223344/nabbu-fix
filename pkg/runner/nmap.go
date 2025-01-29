@@ -27,8 +27,11 @@ func (r *Runner) handleNmap() error {
 
 		// 获取已经扫描的结果数据
 		for hostResult := range r.scanner.ScanResults.GetIPsPorts() {
-			// 将所有扫描的结果都保存到ipsPorts
-			ipsPorts = append(ipsPorts, hostResult)
+			// 过滤可能存在防火墙/CDN的资产
+			if !r.scanner.ScanResults.HasSkipped(hostResult.IP) {
+				// 将所有扫描的结果都保存到ipsPorts
+				ipsPorts = append(ipsPorts, hostResult)
+			}
 		}
 
 		// 端口数量从小到大进行排序
