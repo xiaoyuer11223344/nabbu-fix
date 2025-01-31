@@ -150,23 +150,18 @@ func (h *naabuSingleExecNmapLibrary) Execute() error {
 		return errors.New("invalid user" + usr.Name)
 	}
 
-	testFile := "test.txt"
-	err := os.WriteFile(testFile, []byte("www.zj-1-tree.com.cn\nfilet.1-tree.com.cn"), 0644)
-	if err != nil {
-		return err
-	}
-	defer os.RemoveAll(testFile)
+	inputTargets := []string{"www.zj-1-tree.com.cn"}
 
 	var got bool
 
 	options := runner.Options{
-		HostsFile: testFile,
-		Ports:     "80,8080,443,8899",
-		ScanType:  h.scanType,
-		Nmap:      true,
-		NmapOj:    false,
-		NmapOx:    true,
-		NmapCLI:   "nmap -Pn -sV -T5 --open -oX /tmp/${uuid} -script-args http.useragent='Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36'",
+		Host:     inputTargets,
+		Ports:    "80,8080,443,8899",
+		ScanType: h.scanType,
+		Nmap:     true,
+		NmapOj:   false,
+		NmapOx:   true,
+		NmapCLI:  "nmap -Pn -sV -T5 --open -oX /tmp/${uuid} -script-args http.useragent='Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36'",
 		OnResult: func(hr *result.HostResult) {
 			got = true
 		},
@@ -185,6 +180,7 @@ func (h *naabuSingleExecNmapLibrary) Execute() error {
 	if !got {
 		return errors.New("no results found")
 	}
+
 	r.Close()
 
 	return nil

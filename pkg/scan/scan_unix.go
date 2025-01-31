@@ -95,6 +95,7 @@ func init() {
 	// 将要发送的请求封装存储到对应的通道中
 	go TransportWriteWorker()
 
+	// 将要发送的ICMP请求封装存储到对应的通道中
 	go ICMPWriteWorker()
 }
 
@@ -641,16 +642,17 @@ func TransportReadWorker() {
 			case !sourcePortMatches:
 				gologger.Debug().Msgf("Discarding Transport packet from non target ips: ip4=%s ip6=%s tcp_dport=%d udp_dport=%d\n", srcIP4, srcIP6, tcp.DstPort, udp.DstPort)
 			case listenHandler.Phase.Is(HostDiscovery):
-				// 设置 阶段为 “HostDiscovery”
+				// 主机发现情况
 				proto := protocol.TCP
 				if udpPortMatches {
 					proto = protocol.UDP
 				}
-				//
 				listenHandler.HostDiscoveryChan <- &PkgResult{ipv4: srcIP4, ipv6: srcIP6, port: &port.Port{Port: int(tcp.SrcPort), Protocol: proto}}
 			case tcpPortMatches && tcp.SYN && tcp.ACK:
+				// TCP
 				listenHandler.TcpChan <- &PkgResult{ipv4: srcIP4, ipv6: srcIP6, port: &port.Port{Port: int(tcp.SrcPort), Protocol: protocol.TCP}}
 			case udpPortMatches && udp.Length > 0: // needs a better matching of udp payloads
+				// UDP
 				listenHandler.UdpChan <- &PkgResult{ipv4: srcIP4, ipv6: srcIP6, port: &port.Port{Port: int(udp.SrcPort), Protocol: protocol.UDP}}
 			}
 		}
@@ -660,10 +662,6 @@ func TransportReadWorker() {
 	// always get [Ethernet] layer only.
 	// with the help of data received from packetSource.Packets() we can
 	// extract the high level layers like [IPv4, IPv6, TCP, UDP]
-	// //在OSX的情况下，当我们从“loO”接口解码数据时
-	// 始终只获取[以太网]层。
-	// 借助从packetSource接收到的数据。Packets（）我们可以
-	// 提取高级层，如[IPv4、IPv6、TCP、UDP]
 	loopBackScanCaseCallback := func(handler *pcap.Handle, wg *sync.WaitGroup) {
 		defer wg.Done()
 		packetSource := gopacket.NewPacketSource(handler, handler.LinkType())
@@ -671,8 +669,10 @@ func TransportReadWorker() {
 			tcp := &layers.TCP{}
 			udp := &layers.UDP{}
 			for _, layerType := range packet.Layers() {
+				// ipv4解析
 				ipLayer := packet.Layer(layers.LayerTypeIPv4)
 				if ipLayer == nil {
+					// ipv4解析失败的话，则尝试ipv6解析
 					ipLayer = packet.Layer(layers.LayerTypeIPv6)
 					if ipLayer == nil {
 						continue
@@ -680,25 +680,27 @@ func TransportReadWorker() {
 				}
 				var srcIP4, srcIP6 string
 				if ipv4, ok := ipLayer.(*layers.IPv4); ok {
+					// 获取目标ip v4
 					srcIP4 = ToString(ipv4.SrcIP)
 				} else if ipv6, ok := ipLayer.(*layers.IPv6); ok {
+					// 获取目标ip v6
 					srcIP6 = ToString(ipv6.SrcIP)
 				}
 
 				var ok bool
 
-				// TCP数据包
 				tcpLayer := packet.Layer(layers.LayerTypeTCP)
 				if tcpLayer != nil {
+					// 转换TCP数据包
 					tcp, ok = tcpLayer.(*layers.TCP)
 					if !ok {
 						continue
 					}
 				}
 
-				// UDP数据包转换
 				udpLayer := packet.Layer(layers.LayerTypeUDP)
 				if udpLayer != nil {
+					// 转换UDP数据包
 					udp, ok = udpLayer.(*layers.UDP)
 					if !ok {
 						continue
@@ -707,6 +709,7 @@ func TransportReadWorker() {
 
 				// LayerTypeTCP 或者是 LayerTypeUDP 类型的数据包
 				if layerType.LayerType() == layers.LayerTypeTCP || layerType.LayerType() == layers.LayerTypeUDP {
+					// 回调transportReaderCallback
 					transportReaderCallback(*tcp, *udp, srcIP4, srcIP6)
 				}
 			}

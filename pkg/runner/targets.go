@@ -152,7 +152,7 @@ func (r *Runner) AddTarget(target string) error {
 		return nil
 	}
 
-	// IP地址 但是目标地址不是在IPRanger黑名单中
+	// IP地址 但是目标地址目前不存在IPRanger.Hosts中
 	if iputil.IsIP(target) && !r.scanner.IPRanger.Contains(target) {
 		ip := net.ParseIP(target)
 
@@ -229,8 +229,7 @@ func (r *Runner) AddTarget(target string) error {
 				}
 			}
 		} else if err := r.scanner.IPRanger.AddHostWithMetadata(ip, target); err != nil {
-			// 正常情况下就是  主键形式  键为ip 值为target
-			// 183.129.186.242 erp.dtwave.com 111
+			// 正常情况下就是  主键形式  键为ip (8.129.53.147)  值为target (sockett.1-tree.com.cn 123123)
 			gologger.Warning().Msgf("%s\n", err)
 		}
 	}

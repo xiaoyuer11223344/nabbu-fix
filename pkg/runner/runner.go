@@ -191,6 +191,7 @@ func (r *Runner) onReceive(hostResult *result.HostResult) {
 		ipPort := net.JoinHostPort(hostResult.IP, fmt.Sprint(p.Port))
 
 		// 判断是否已经记录过
+		// 主要目的可能多个hostname存在同个ip，那么同ip:port 只需要出现一次即可
 		if r.unique.Has(ipPort) {
 			return
 		}
@@ -560,7 +561,7 @@ func (r *Runner) RunEnumeration(pctx context.Context) error {
 		// CIDR以及ipsWithPort
 		ipsCallback := r.getPreprocessedIps
 		if shouldDiscoverHosts && shouldUseRawPackets {
-			// note: 只有cidr的数据, 这里会直接从r.scanner.HostDiscoveryResults进行获取主机存活的数据
+			// note: 如果开启了主机发现的功能，下面扫描的数据就来源于主机发现返回的存活主机
 			ipsCallback = r.getHostDiscoveryIps
 		}
 
