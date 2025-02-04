@@ -291,6 +291,124 @@ func (r *Runner) onReceive(hostResult *result.HostResult) {
 	}
 }
 
+func (r *Runner) onTask(hostResult *result.HostResult) {
+	// 判断ipv4还是ipv6
+	if !ipMatchesIpVersions(hostResult.IP, r.options.IPVersion...) {
+		return
+	}
+
+	// 获取当前IP对应的所有host域名信息
+	dt, err := r.scanner.IPRanger.GetHostsByIP(hostResult.IP)
+	if err != nil {
+		return
+	}
+
+	// 接收事件只有一个端口
+	for _, p := range hostResult.Ports {
+		// 拼接 1.1.1.1:8080
+		ipPort := net.JoinHostPort(hostResult.IP, fmt.Sprint(p.Port))
+
+		// 判断是否已经记录过
+		// 主要目的可能多个hostname存在同个ip，那么同ip:port 只需要出现一次即可
+		if r.unique.Has(ipPort) {
+			return
+		}
+	}
+
+	// 从ip:port组合中恢复主机名
+	for _, p := range hostResult.Ports {
+		ipPort := net.JoinHostPort(hostResult.IP, fmt.Sprint(p.Port))
+		if dtOthers, ok := r.scanner.IPRanger.Hosts.Get(ipPort); ok {
+			if otherName, _, err := net.SplitHostPort(string(dtOthers)); err == nil {
+				// 用主机替换 裸ip:port
+				for idx, ipCandidate := range dt {
+					if iputil.IsIP(ipCandidate) {
+						dt[idx] = otherName
+					}
+				}
+			}
+		}
+		_ = r.unique.Set(ipPort, struct{}{})
+	}
+
+	csvHeaderEnabled := true
+
+	buffer := bytes.Buffer{}
+	writer := csv.NewWriter(&buffer)
+
+	for _, host := range dt {
+
+		// 清空缓冲区字符串
+		buffer.Reset()
+
+		var (
+			isCDN   bool
+			cdnName string
+		)
+
+		// 如果标识符为ip的话
+		if host == "ip" {
+			// CDN检测
+			host = hostResult.IP
+			isCDN, cdnName, _ = r.scanner.CdnCheck(host)
+		} else {
+			// CDN检测
+			isCDN, cdnName, _ = r.scanner.CdnCheckDomain(host)
+		}
+
+		// 保存数据到文件 (json或者是csv格式)
+		if r.options.JSON || r.options.CSV {
+			data := &Result{IP: hostResult.IP, TimeStamp: time.Now().UTC()}
+			if r.options.OutputCDN {
+				data.IsCDN = isCDN
+				data.CDNName = cdnName
+			}
+			if host != hostResult.IP {
+				data.Host = host
+			}
+			for _, p := range hostResult.Ports {
+				data.Port = p.Port
+				data.Protocol = p.Protocol.String()
+				data.TLS = p.TLS
+				if r.options.JSON {
+					// json格式数据保存
+					b, err := data.JSON()
+					if err != nil {
+						continue
+					}
+					buffer.Write([]byte(fmt.Sprintf("%s\n", b)))
+				} else if r.options.CSV {
+					// csv格式数据保存
+					if csvHeaderEnabled {
+						writeCSVHeaders(data, writer)
+						csvHeaderEnabled = false
+					}
+					writeCSVRow(data, writer)
+				}
+			}
+		}
+
+		// 控制台输出内容
+		if r.options.JSON {
+			gologger.Silent().Msgf("%s", buffer.String())
+		} else if r.options.CSV {
+			writer.Flush()
+			gologger.Silent().Msgf("%s", buffer.String())
+		} else {
+			// 默认控制台正常输出内容
+			for _, p := range hostResult.Ports {
+				if r.options.OutputCDN && isCDN {
+					// 如果指定了cdn输出的话，那么就是 host:port cdn
+					gologger.Silent().Msgf("%s:%d [%s]\n", host, p.Port, cdnName)
+				} else {
+					// host:port的内容
+					gologger.Silent().Msgf("%s:%d\n", host, p.Port)
+				}
+			}
+		}
+	}
+}
+
 // RunEnumeration runs the ports enumeration flow on the targets specified
 func (r *Runner) RunEnumeration(pctx context.Context) error {
 
@@ -554,6 +672,7 @@ func (r *Runner) RunEnumeration(pctx context.Context) error {
 
 		// 处理后续的nmap扫描
 		return r.handleNmap()
+
 	default:
 		// 默认情况下的处理
 		showNetworkCapabilities(r.options)
@@ -750,7 +869,7 @@ func (r *Runner) RunEnumeration(pctx context.Context) error {
 		// 最终处理的结果都存储到ScanResults , 主键值形式进行存储  1.1.1.1:[80,443,8080] 形式
 		r.handleOutput(r.scanner.ScanResults)
 
-		// 前面的数据是否用于nmap
+		// 处理后续的nmap扫描
 		return r.handleNmap()
 	}
 }

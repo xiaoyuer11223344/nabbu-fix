@@ -151,7 +151,7 @@ func (r *Runner) handleNmap() error {
 				var nmapResults []*result.NmapResult
 
 				// todo: callback
-				if r.options.OnNMAPCallback != nil && (r.options.NmapOx || r.options.NmapOj) {
+				if r.options.OnNMAP != nil && (r.options.NmapOx || r.options.NmapOj) {
 					data, errMsg := os.ReadFile(DefaultNmapFilePath(uuidString))
 					if err != nil {
 						gologger.Error().Msg(errMsg.Error())
@@ -280,7 +280,7 @@ func (r *Runner) handleNmap() error {
 						}
 					}
 
-					r.options.OnNMAPCallback(nmapResults)
+					r.options.OnNMAP(nmapResults)
 
 				} else {
 					// todo: test data

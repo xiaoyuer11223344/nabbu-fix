@@ -67,7 +67,7 @@ type Options struct {
 	baseResolvers     []string
 	OnReceive         result.ResultFn     // 主机每个端口响应结果回调操作
 	OnResult          result.ResultFn     // 每个主机所有端口结果回调操作
-	OnNMAPCallback    result.NmapResultFn // 所有主机所有端口nmap结果回调操作
+	OnNMAP            result.NmapResultFn // 所有主机所有端口nmap结果回调操作
 	CSV               bool
 	Resume            bool
 	ResumeCfg         *ResumeCfg
