@@ -106,7 +106,7 @@ func (r *Runner) handleNmap() error {
 			// 添加IP参数
 			args = append(args, ips...)
 
-			// 判断当前nmap命令是否可用于执行
+			// 适应不同系统的命令行长度
 			commandCanBeExecuted := isCommandExecutable(args)
 
 			// 是否需要支持nmap进行调用
@@ -148,9 +148,8 @@ func (r *Runner) handleNmap() error {
 					return errMsg
 				}
 
-				var nmapResults []*result.NmapResult
-
 				// todo: callback
+				var nmapResults []*result.NmapResult
 				if r.options.OnNMAP != nil && (r.options.NmapOx || r.options.NmapOj) {
 					data, errMsg := os.ReadFile(DefaultNmapFilePath(uuidString))
 					if err != nil {
@@ -192,9 +191,11 @@ func (r *Runner) handleNmap() error {
 											CPE:        strings.Join(result.ConvertCPEsToStrings(_port.Service.CPEs), ","),
 										}
 
-										// todo: null -> unknown
-										if _port.Service.Name == "" {
-											newPort.Service = "unknown"
+										// todo: black filter
+										if _port.Service.Name == "" ||
+											_port.Service.Name == "unknown" ||
+											_port.Service.Name == "tcpwrapped" {
+											continue
 										}
 
 										// todo: http+tls -> https
@@ -246,9 +247,11 @@ func (r *Runner) handleNmap() error {
 										CPE:        strings.Join(result.ConvertCPEsToStrings(_port.Service.CPEs), ","),
 									}
 
-									// todo: null -> unknown
-									if _port.Service.Name == "" {
-										newPort.Service = "unknown"
+									// todo: black filter
+									if _port.Service.Name == "" ||
+										_port.Service.Name == "unknown" ||
+										_port.Service.Name == "tcpwrapped" {
+										continue
 									}
 
 									// todo: http+tls -> https
