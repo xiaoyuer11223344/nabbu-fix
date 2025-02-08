@@ -1130,9 +1130,9 @@ func (r *Runner) handleHostPort(ctx context.Context, host string, p *port.Port) 
 		}
 
 		// 存在err的情况的话，那么添加一个空指针的port类型，作用只是为了给"Host"做一个标识
-		if err != nil {
-			r.scanner.ScanResults.AddIp(host)
-		}
+		//if err != nil {
+		//	r.scanner.ScanResults.AddIp(host)
+		//}
 	}
 }
 

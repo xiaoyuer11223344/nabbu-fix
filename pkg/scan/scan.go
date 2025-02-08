@@ -338,17 +338,17 @@ func (s *Scanner) UDPResultWorker(ctx context.Context) {
 				if ip.ipv4 != "" {
 					s.HostDiscoveryResults.AddIp(ip.ipv4)
 				}
-				if ip.ipv6 != "" {
-					s.HostDiscoveryResults.AddIp(ip.ipv6)
-				}
+				//if ip.ipv6 != "" {
+				//	s.HostDiscoveryResults.AddIp(ip.ipv6)
+				//}
 			} else if s.ListenHandler.Phase.Is(Scan) || s.stream {
 				gologger.Debug().Msgf("Received Transport (UDP) scan response from from ipv4:%s ipv6:%s port:%d\n", ip.ipv4, ip.ipv6, ip.port.Port)
 				if ip.ipv4 != "" {
 					s.ScanResults.AddPort(ip.ipv4, ip.port)
 				}
-				if ip.ipv6 != "" {
-					s.ScanResults.AddPort(ip.ipv6, ip.port)
-				}
+				//if ip.ipv6 != "" {
+				//	s.ScanResults.AddPort(ip.ipv6, ip.port)
+				//}
 			}
 		}
 	}
